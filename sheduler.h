@@ -14,7 +14,7 @@
 
 class Sheduler {
 private:
-    std::mutex LocalMutex;
+    //std::mutex LocalMutex;
     int thread_count;
     int time_limit_msc;
     std::vector<FunctionPtr> sheduler_functions;
