@@ -1,26 +1,26 @@
-#include "sheduler.h"
+#include "scheduler.h"
 
-Sheduler::Sheduler(const int &memory_size, const int &green_count, const int &time_limit)
-    : thread_count(green_count), time_limit_msc(time_limit), sheduler_stack(memory_size, green_count) {
-    this->add_all_func_to_sheduler();
-    random_time_sleep_vector = generateRandomIntegers(this->sheduler_stack.mem_size, 300, 500);
+Scheduler::Scheduler(const int &memory_size, const int &green_count, const int &time_limit)
+    : thread_count(green_count), time_limit_msc(time_limit), scheduler_stack(memory_size, green_count) {
+    this->add_all_func_to_scheduler();
+    random_time_sleep_vector = generateRandomIntegers(this->scheduler_stack.mem_size, 300, 500);
     global_sum_milliseconds = std::accumulate(random_time_sleep_vector.begin(), random_time_sleep_vector.end(), 0);
     for (const auto &x: random_time_sleep_vector) {
         std::cout << x << " time \n";
     };
 };
 
-void Sheduler::push_functions_to_vector(FunctionPtr add_func) {
-    sheduler_functions.push_back(add_func);
+void Scheduler::push_functions_to_vector(FunctionPtr add_func) {
+    scheduler_functions.push_back(add_func);
 };
 
-void Sheduler::add_all_func_to_sheduler() {
-    for (int i = 0; i < this->sheduler_stack.mem_size; i++) {
+void Scheduler::add_all_func_to_scheduler() {
+    for (int i = 0; i < this->scheduler_stack.mem_size; i++) {
         push_functions_to_vector(is_io_ready);
     };
 };
 
-std::vector<int> Sheduler::generateRandomIntegers(int count, int minValue, int maxValue) {
+std::vector<int> Scheduler::generateRandomIntegers(int count, int minValue, int maxValue) {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> dis(minValue, maxValue);
@@ -35,26 +35,26 @@ std::vector<int> Sheduler::generateRandomIntegers(int count, int minValue, int m
     return random_integers;
 };
 
-void Sheduler::green_execution() {
+void Scheduler::green_execution() {
     int mem_pos_used = 0;
     int mem_index = 0;
     int current_thread_position = 0;
     int current_thread = 0;
     int sleep_time;
-    std::vector<bool> time_out_exceed_function_idx(this->sheduler_stack.mem_size, false);
+    std::vector<bool> time_out_exceed_function_idx(this->scheduler_stack.mem_size, false);
     std::chrono::steady_clock::time_point default_time_point;
-    std::vector<std::chrono::steady_clock::time_point> function_input_timing(this->sheduler_stack.mem_size);
-    std::vector<std::chrono::steady_clock::time_point> exceed_functions_last_delay(this->sheduler_stack.mem_size);
+    std::vector<std::chrono::steady_clock::time_point> function_input_timing(this->scheduler_stack.mem_size);
+    std::vector<std::chrono::steady_clock::time_point> exceed_functions_last_delay(this->scheduler_stack.mem_size);
     auto global_start = std::chrono::steady_clock::now();
 
-    while (mem_pos_used < this->sheduler_stack.mem_size) {
-        for (int current_offset = 0; current_offset < this->sheduler_stack.offset; current_offset++) {
-            for (int current_thread = 0; current_thread < this->sheduler_stack.thread_size; current_thread++) {
-                mem_index = (current_thread * this->sheduler_stack.offset) + current_offset;
+    while (mem_pos_used < this->scheduler_stack.mem_size) {
+        for (int current_offset = 0; current_offset < this->scheduler_stack.offset; current_offset++) {
+            for (int current_thread = 0; current_thread < this->scheduler_stack.thread_size; current_thread++) {
+                mem_index = (current_thread * this->scheduler_stack.offset) + current_offset;
                 if (time_out_exceed_function_idx[mem_index] == true) {
                     continue;
                 }
-                int current_stack_value = this->sheduler_stack.stack_memory[mem_index];
+                int current_stack_value = this->scheduler_stack.stack_memory[mem_index];
 
                 auto current_time = std::chrono::steady_clock::now();
                 if (exceed_functions_last_delay[mem_index] == default_time_point) {
@@ -67,11 +67,11 @@ void Sheduler::green_execution() {
 
                 function_input_timing[mem_index] = current_time;
 
-                bool result = this->sheduler_functions[mem_index](sleep_time, time_limit_msc);
+                bool result = this->scheduler_functions[mem_index](sleep_time, time_limit_msc);
                 auto time_after_execution = std::chrono::steady_clock::now();
                 if (result == true) {
                     time_out_exceed_function_idx[mem_index] = true;
-                    this->sheduler_stack.stack_memory[mem_index] = 42; //just assign to stack some var
+                    this->scheduler_stack.stack_memory[mem_index] = 42; //just assign to stack some var
                     mem_pos_used++;
                 } else {
                     time_out_exceed_function_idx[mem_index] = false;
