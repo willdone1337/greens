@@ -1,6 +1,6 @@
 # Green Threads Scheduler
 
-This project implements a high-level abstraction of working green threads in C++. It provides a scheduling mechanism for managing green threads, allowing for efficient concurrent execution within a single process.
+This project implements a high-level abstraction of working green threads in C++. It provides a scheduling mechanism for managing green threads, allowing for efficient concurrent execution within a single process and currently support only single thread.
 
 ## Overview
 
